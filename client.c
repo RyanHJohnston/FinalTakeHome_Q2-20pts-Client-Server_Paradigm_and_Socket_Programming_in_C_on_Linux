@@ -86,30 +86,13 @@ int main(int argc, char *argv[]) {
             sendRequest(clientSocket, "GET_AVG");
             receiveResponse(clientSocket);
         } else if (strcmp(input, "3") == 0) {
+            printf("Stopping...\n");
             sendRequest(clientSocket, "STOP");
             break;
         } else {
             printf("Invalid option. Please try again.\n");
         }
     }
-    
-    /* do { */
-    /*     // Read a command from the user */
-    /*     printf("Enter command: "); */
-    /*     fgets(Sentence, 128, stdin); */
-    /*     Sentence[strcspn(Sentence, "\n")] = 0; // Remove newline character */
-
-    /*     // Send the command to the server */
-    /*     write(clientSocket, Sentence, strlen(Sentence) + 1); */
-
-    /*     // If the command is not "STOP", wait for a response from the server */
-    /*     if (strcmp(Sentence, "STOP") != 0) { */
-    /*         n = read(clientSocket, modifiedSentence, sizeof(modifiedSentence)); */
-    /*         modifiedSentence[n] = '\0'; // Null-terminate the received string */
-    /*         printf("Response from server: %s\n", modifiedSentence); // Display the response */
-    /*     } */
-    /* } while (strcmp(Sentence, "STOP") != 0); */
-
     // Close the socket
     close(clientSocket);
     return 0;

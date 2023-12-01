@@ -83,13 +83,17 @@ int main(int argc, char *argv[]) {
         // Create a child process to handle the client
         if (fork() == 0) { // Child process
             close(welcomeSocket); // Close the listening socket in the child process
+            printf("Closing listening socket in the child process...\n");
+            printf("Processing client requests...\n");
             processClientRequest(connectionSocket); // Process client requests
             exit(0); // Terminate child process after handling the client
         }
         // Parent process continues here
+        printf("Closing parent process socket...\n");
         close(connectionSocket); // Close the connected socket in the parent process
     }
     // Closing the listening socket (optional, as the loop is infinite)
+    printf("Closing socket...\n");
     close(welcomeSocket);
 }
 
