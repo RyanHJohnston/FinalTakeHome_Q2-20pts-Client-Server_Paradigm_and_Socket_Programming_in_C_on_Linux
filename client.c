@@ -1,88 +1,117 @@
-/* client.c - code for example client program that uses TCP */
-
+// Include necessary header files
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include <netdb.h>
 
-int main(argc, argv)
-    int     argc;
-    char    *argv[];
-{ 
-    struct  sockaddr_in sad; /* structure to hold an IP address     */
-    int     clientSocket;    /* socket descriptor                   */ 
-    struct  hostent  *ptrh;  /* pointer to a host table entry       */
+void sendRequest(int clientSocket, const char* request) {
+    write(clientSocket, request, strlen(request) + 1); // Send request
+}
 
-    char    *host;           /* pointer to host name                */
-    int     port;            /* protocol port number                */  
+void receiveResponse(int clientSocket) {
+    char response[128];
+    int n = read(clientSocket, response, sizeof(response) - 1);
+    response[n] = '\0'; // Null-terminate the string
+    printf("Response from server: %s\n", response);
+}
 
-    char    Sentence[128]; 
-    char    modifiedSentence[128]; 
-    char    buff[128];
-    int     n;
+int main(int argc, char *argv[]) {
+    // Variable declarations for client program
+    struct sockaddr_in sad; // Structure to hold server's address
+    int clientSocket; // Socket descriptor
+    struct hostent *ptrh; // Pointer to a host table entry
+    char *host; // Pointer to host name
+    int port; // Protocol port number
+    char Sentence[128]; // Buffer for input sentence
+    char modifiedSentence[128]; // Buffer for the modified sentence
+    int n; // Number of bytes read
+    char input[10];
 
+    // Check for correct number of arguments and parse them
     if (argc != 3) {
         fprintf(stderr,"Usage: %s server-name port-number\n",argv[0]);
         exit(1);
     }
+    host = argv[1]; // Extract host-name from command-line argument
+    port = atoi(argv[2]); // Extract port number and convert to binary
 
-    /* Extract host-name from command-line argument */
-    host = argv[1];         /* if host argument specified   */
-
-    /* Extract port number  from command-line argument */
-    port = atoi(argv[2]);   /* convert to binary            */
-
-    /* Create a socket. */
-
+    // Create a TCP socket
     clientSocket = socket(PF_INET, SOCK_STREAM, 0);
     if (clientSocket < 0) {
         fprintf(stderr, "socket creation failed\n");
         exit(1);
     }
 
-    /* Connect the socket to the specified server. */
-
-    memset((char *)&sad,0,sizeof(sad)); /* clear sockaddr structure */
-    sad.sin_family = AF_INET;           /* set family to Internet     */
-    sad.sin_port = htons((u_short)port);
-    ptrh = gethostbyname(host); /* Convert host name to equivalent IP address and copy to sad. */
-    if ( ((char *)ptrh) == NULL ) {
+    // Connect the socket to the specified server
+    memset((char *)&sad, 0, sizeof(sad)); // Clear sockaddr structure
+    sad.sin_family = AF_INET; // Set family to Internet
+    sad.sin_port = htons((u_short)port); // Set the port number
+    ptrh = gethostbyname(host); // Convert host name to IP address
+    if (((char *)ptrh) == NULL) {
         fprintf(stderr,"invalid host: %s\n", host);
         exit(1);
     }
+
     memcpy(&sad.sin_addr, ptrh->h_addr, ptrh->h_length);
 
     if (connect(clientSocket, (struct sockaddr *)&sad, sizeof(sad)) < 0) {
         fprintf(stderr,"connect failed\n");
         exit(1);
     }
+    
+    while (1) {
+        printf("1. Get GRADE for student\n");
+        printf("2. Get Min, Max, and Avg\n");
+        printf("3. Stop\n");
+        printf("Enter (1/2/3): ");
+        scanf(" %s", input);
 
-    /* Read a sentence from user */
-
-    printf("Sentence   :   "); gets(Sentence);
-
-    /* Send the sentence to the server  */
-
-    write(clientSocket, Sentence, strlen(Sentence)+1);
-
-    /* Get the modified sentence from the server and write it to the screen*/
-    modifiedSentence[0]='\0';
-    n=read(clientSocket, buff, sizeof(buff));
-    while(n > 0){
-        strncat(modifiedSentence,buff,n);
-        if (buff[n-1]=='\0') break;
-        n=read(clientSocket, buff, sizeof(buff));
+        if (strcmp(input, "1") == 0) {
+            char studentID[20];
+            printf("Enter student ID: ");
+            scanf(" %s", studentID);
+            char request[30];
+            sprintf(request, "GET_GRADE %s", studentID);
+            sendRequest(clientSocket, request);
+            receiveResponse(clientSocket);
+        } else if (strcmp(input, "2") == 0) {
+            sendRequest(clientSocket, "GET_MIN");
+            receiveResponse(clientSocket);
+            sendRequest(clientSocket, "GET_MAX");
+            receiveResponse(clientSocket);
+            sendRequest(clientSocket, "GET_AVG");
+            receiveResponse(clientSocket);
+        } else if (strcmp(input, "3") == 0) {
+            sendRequest(clientSocket, "STOP");
+            break;
+        } else {
+            printf("Invalid option. Please try again.\n");
+        }
     }
+    
+    /* do { */
+    /*     // Read a command from the user */
+    /*     printf("Enter command: "); */
+    /*     fgets(Sentence, 128, stdin); */
+    /*     Sentence[strcspn(Sentence, "\n")] = 0; // Remove newline character */
 
-    printf("Modified to -> %s\n",modifiedSentence);
+    /*     // Send the command to the server */
+    /*     write(clientSocket, Sentence, strlen(Sentence) + 1); */
 
-    /* Close the socket. */
+    /*     // If the command is not "STOP", wait for a response from the server */
+    /*     if (strcmp(Sentence, "STOP") != 0) { */
+    /*         n = read(clientSocket, modifiedSentence, sizeof(modifiedSentence)); */
+    /*         modifiedSentence[n] = '\0'; // Null-terminate the received string */
+    /*         printf("Response from server: %s\n", modifiedSentence); // Display the response */
+    /*     } */
+    /* } while (strcmp(Sentence, "STOP") != 0); */
 
+    // Close the socket
     close(clientSocket);
-
+    return 0;
 }
-
 
