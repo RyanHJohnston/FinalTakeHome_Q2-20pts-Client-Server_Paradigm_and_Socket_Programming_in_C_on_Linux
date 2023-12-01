@@ -31,6 +31,8 @@ struct student_info DB[10] = {
 void processClientRequest(int connectionSocket);
 
 int main(int argc, char *argv[]) {
+    int i;
+
     // Variable declarations for server address, client address, etc.
     struct sockaddr_in sad; // Structure to hold server's address
     struct sockaddr_in cad; // Structure to hold client's address
@@ -95,6 +97,7 @@ int main(int argc, char *argv[]) {
 void processClientRequest(int sock) {
     char clientSentence[128];
     int n;
+    int i;
     char response[128]; // Buffer for the response
 
     while (1) {
@@ -108,7 +111,7 @@ void processClientRequest(int sock) {
             // Extract student ID and find grade
             char* id = clientSentence + 10;
             int found = 0;
-            for (int i = 0; i < 10; ++i) {
+            for (i = 0; i < 10; ++i) {
                 if (strcmp(DB[i].ID, id) == 0) {
                     sprintf(response, "Name: %s, Grade: %.1f", DB[i].name, DB[i].grade);
                     found = 1;
@@ -121,7 +124,7 @@ void processClientRequest(int sock) {
         } else if (strcmp(clientSentence, "GET_MAX") == 0) {
             // Find the maximum grade
             double maxGrade = DB[0].grade;
-            for (int i = 1; i < 10; ++i) {
+            for (i = 1; i < 10; ++i) {
                 if (DB[i].grade > maxGrade) {
                     maxGrade = DB[i].grade;
                 }
@@ -130,7 +133,7 @@ void processClientRequest(int sock) {
         } else if (strcmp(clientSentence, "GET_MIN") == 0) {
             // Find the minimum grade
             double minGrade = DB[0].grade;
-            for (int i = 1; i < 10; ++i) {
+            for (i = 1; i < 10; ++i) {
                 if (DB[i].grade < minGrade) {
                     minGrade = DB[i].grade;
                 }
@@ -139,7 +142,7 @@ void processClientRequest(int sock) {
         } else if (strcmp(clientSentence, "GET_AVG") == 0) {
             // Calculate the average grade
             double sum = 0;
-            for (int i = 0; i < 10; ++i) {
+            for (i = 0; i < 10; ++i) {
                 sum += DB[i].grade;
             }
             double avg = sum / 10;
